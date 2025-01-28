@@ -1,13 +1,18 @@
 "use client";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { fetchProducts, Product } from "@/api/getData";
 import {
   createColumnHelper,
   flexRender,
   getCoreRowModel,
+  getFilteredRowModel,
+  getPaginationRowModel,
+  getSortedRowModel,
   useReactTable,
+  PaginationState,
 } from "@tanstack/react-table";
+
 import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
 import TableCell from "@mui/material/TableCell";
@@ -15,8 +20,11 @@ import TableContainer from "@mui/material/TableContainer";
 import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import Paper from "@mui/material/Paper";
+
+// Create a column helper for the Product type
 const columnHelper = createColumnHelper<Product>();
 
+// Define the columns for the table
 const columns = [
   columnHelper.accessor("id", {
     cell: (info) => info.getValue(),
@@ -47,39 +55,87 @@ const columns = [
   }),
 ];
 
+// Define the TableComponent
 const TableComponent = () => {
+  // Custom hook to fetch products using react-query
   function useProducts() {
     return useQuery<Product[]>({
       queryKey: ["products"],
       queryFn: fetchProducts,
     });
   }
-  const { data, error, isLoading } = useProducts();
 
-  const table = useReactTable({
-    data: data ?? [],
-    columns,
-    getCoreRowModel: getCoreRowModel(),
+  // Fetch products data
+  const { data, error, isLoading, refetch } = useProducts();
+
+  // Refetch data on component mount
+  useEffect(() => {
+    refetch();
+  }, []);
+
+  // State for pagination
+  const [pagination, setPagination] = useState<PaginationState>({
+    pageIndex: 0,
+    pageSize: 20,
   });
 
+  // Initialize the table with react-table
+  const table = useReactTable({
+    columns,
+    data: data ?? [], // Provide an empty array if data is undefined
+    debugTable: true,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    onPaginationChange: setPagination,
+    state: {
+      pagination,
+    },
+  });
+
+  // Display loading state
   if (isLoading) return <div>Loading...</div>;
+
+  // Display error state
   if (error) return <div>Error loading products</div>;
 
+  // Render the table
   return (
     <div className="pt-10">
       <TableContainer component={Paper}>
-        <Table sx={{ minWidth: 650 }} aria-label="simple table">
+        <Table sx={{ width: 950 }} aria-label="simple table">
           <TableHead>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
-                  <TableCell key={header.id} align="right">
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
+                  <TableCell key={header.id}>
+                    <div
+                      className={
+                        header.column.getCanSort()
+                          ? "cursor-pointer select-none"
+                          : ""
+                      }
+                      // this allow sorting on Click
+                      onClick={header.column.getToggleSortingHandler()}
+                    >
+                      {/* here is the header text */}
+                      {flexRender(
+                        header.column.columnDef.header,
+                        header.getContext()
+                      )}
+
+                      {/* here we show arrows for Sorting */}
+                      {/* {{
+                        asc: " 🔼",
+                        desc: " 🔽",
+                      }[header.column.getIsSorted() as string] ?? null} */}
+
+                      {/* Uncomment the following lines to enable filtering */}
+                      {/* {header.column.getCanFilter() && (
+                        <Filter column={header.column} table={table} />
+                      )} */}
+                    </div>
                   </TableCell>
                 ))}
               </TableRow>
