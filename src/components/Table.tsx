@@ -1,15 +1,20 @@
 "use client";
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
-import { fetchProducts } from "@/api/getData";
-import { Product } from "@/api/getData";
+import { fetchProducts, Product } from "@/api/getData";
 import {
   createColumnHelper,
   flexRender,
   getCoreRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-
+import Table from "@mui/material/Table";
+import TableBody from "@mui/material/TableBody";
+import TableCell from "@mui/material/TableCell";
+import TableContainer from "@mui/material/TableContainer";
+import TableHead from "@mui/material/TableHead";
+import TableRow from "@mui/material/TableRow";
+import Paper from "@mui/material/Paper";
 const columnHelper = createColumnHelper<Product>();
 
 const columns = [
@@ -42,67 +47,62 @@ const columns = [
   }),
 ];
 
-const Table = () => {
+const TableComponent = () => {
   function useProducts() {
-    return useQuery({
+    return useQuery<Product[]>({
       queryKey: ["products"],
       queryFn: fetchProducts,
     });
   }
   const { data, error, isLoading } = useProducts();
 
-  // here we have ( all 3 mandatory! )
-  // 1-the Data,
-  // 2-the Column structure
-  // getCoreRowModel() will create
   const table = useReactTable({
     data: data ?? [],
     columns,
     getCoreRowModel: getCoreRowModel(),
   });
-  //const rowSelection = table.getState().rowSelection; //read the row selection state
-  //const setRowSelection = table.setRowSelection((old) => ({ ...old })); //set the row selection state
-  //const resetRowSelection = table.resetRowSelection(); //reset the row selection state
-  //console.log("rowSelection", rowSelection);
-  //console.log("setRowSelection", setRowSelection);
-  //console.log("resetRowSelection", resetRowSelection);
 
   if (isLoading) return <div>Loading...</div>;
   if (error) return <div>Error loading products</div>;
 
   return (
-    <div className="pt-[10rem]">
-      <table>
-        <thead>
-          {table.getHeaderGroups().map((headerGroup) => (
-            <tr key={headerGroup.id}>
-              {headerGroup.headers.map((header) => (
-                <th key={header.id}>
-                  {header.isPlaceholder
-                    ? null
-                    : flexRender(
-                        header.column.columnDef.header,
-                        header.getContext()
-                      )}
-                </th>
-              ))}
-            </tr>
-          ))}
-        </thead>
-        <tbody>
-          {table.getRowModel().rows.map((row) => (
-            <tr key={row.id}>
-              {row.getVisibleCells().map((cell) => (
-                <td key={cell.id}>
-                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                </td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
+    <div className="pt-10">
+      <TableContainer component={Paper}>
+        <Table sx={{ minWidth: 650 }} aria-label="simple table">
+          <TableHead>
+            {table.getHeaderGroups().map((headerGroup) => (
+              <TableRow key={headerGroup.id}>
+                {headerGroup.headers.map((header) => (
+                  <TableCell key={header.id} align="right">
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
+                  </TableCell>
+                ))}
+              </TableRow>
+            ))}
+          </TableHead>
+          <TableBody>
+            {table.getRowModel().rows.map((row) => (
+              <TableRow
+                key={row.id}
+                sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
+              >
+                {row.getVisibleCells().map((cell) => (
+                  <TableCell key={cell.id} component="th" scope="row">
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </TableCell>
+                ))}
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
     </div>
   );
 };
 
-export default Table;
+export default TableComponent;
