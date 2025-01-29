@@ -28,30 +28,24 @@ const columnHelper = createColumnHelper<Product>();
 const columns = [
   columnHelper.accessor("id", {
     cell: (info) => info.getValue(),
-    footer: (info) => info.column.id,
   }),
   columnHelper.accessor((row) => row.brand, {
     id: "brand",
     cell: (info) => <i>{info.getValue()}</i>,
     header: () => <span>Brand</span>,
-    footer: (info) => info.column.id,
   }),
   columnHelper.accessor("title", {
     header: () => "Title",
     cell: (info) => info.renderValue(),
-    footer: (info) => info.column.id,
   }),
   columnHelper.accessor("category", {
     header: () => <span>Category</span>,
-    footer: (info) => info.column.id,
   }),
   columnHelper.accessor("rating", {
     header: "Rating",
-    footer: (info) => info.column.id,
   }),
   columnHelper.accessor("price", {
     header: "Price",
-    footer: (info) => info.column.id,
   }),
 ];
 
@@ -76,7 +70,7 @@ const TableComponent = () => {
   // State for pagination
   const [pagination, setPagination] = useState<PaginationState>({
     pageIndex: 0,
-    pageSize: 20,
+    pageSize: 10,
   });
 
   // Initialize the table with react-table
@@ -93,7 +87,6 @@ const TableComponent = () => {
       pagination,
     },
   });
-
   // Display loading state
   if (isLoading) return <div>Loading...</div>;
 
@@ -157,6 +150,56 @@ const TableComponent = () => {
           </TableBody>
         </Table>
       </TableContainer>
+      <div className="flex items-center justify-end gap-2 p-5 ">
+        <button
+          className="border rounded px-4 py-2 cursor-pointer  hover:bg-slate-500"
+          onClick={() => table.firstPage()}
+          disabled={!table.getCanPreviousPage()}
+        >
+          {"<<"}
+        </button>
+        <button
+          className="border rounded px-4 py-2 cursor-pointer  hover:bg-slate-500"
+          onClick={() => table.previousPage()}
+          disabled={!table.getCanPreviousPage()}
+        >
+          {"<"}
+        </button>
+        <button
+          className="border rounded px-4 py-2 cursor-pointer  hover:bg-slate-500"
+          onClick={() => table.nextPage()}
+          disabled={!table.getCanNextPage()}
+        >
+          {">"}
+        </button>
+        <button
+          className="border rounded px-4 py-2 cursor-pointer  hover:bg-slate-500"
+          onClick={() => table.lastPage()}
+          disabled={!table.getCanNextPage()}
+        >
+          {">>"}
+        </button>
+        <span className="flex items-center gap-1 mx-4">
+          <div>Page</div>
+          <strong>
+            {table.getState().pagination.pageIndex + 1} of{" "}
+            {table.getPageCount().toLocaleString()}
+          </strong>
+        </span>
+
+        <select
+          value={table.getState().pagination.pageSize}
+          onChange={(e) => {
+            table.setPageSize(Number(e.target.value));
+          }}
+        >
+          {[10, 20, 30].map((pageSize) => (
+            <option key={pageSize} value={pageSize}>
+              Show {pageSize}
+            </option>
+          ))}
+        </select>
+      </div>
     </div>
   );
 };
