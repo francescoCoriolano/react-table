@@ -11,6 +11,7 @@ import {
   getSortedRowModel,
   useReactTable,
   PaginationState,
+  filterFns,
 } from "@tanstack/react-table";
 import { Row } from "@tanstack/react-table";
 import Table from "@mui/material/Table";
@@ -74,23 +75,30 @@ const TableComponent = () => {
     pageSize: 10,
   });
 
+  // State for global filter
+  const [globalFilter, setGlobalFilter] = useState<string>("");
+
   // Initialize the table with react-table
   const table = useReactTable({
     columns,
-    data: data ?? [], // Provide an empty array if data is undefined
+    data: data ?? [],
     debugTable: true,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     onPaginationChange: setPagination,
+    globalFilterFn: filterFns.includesString,
     state: {
       pagination,
+      globalFilter,
     },
+    onGlobalFilterChange: setGlobalFilter,
   });
+
   const csvConfig = mkConfig({
     fieldSeparator: ",",
-    filename: "sample", // export file name (without .csv)
+    filename: "sample",
     decimalSeparator: ".",
     useKeysAsHeaders: true,
   });
@@ -121,6 +129,14 @@ const TableComponent = () => {
   // Render the table
   return (
     <div className="pt-10">
+      <div className="p-10">
+        <input
+          value={globalFilter}
+          onChange={(e) => setGlobalFilter(e.target.value)}
+          placeholder="Search..."
+          className="text-black"
+        />
+      </div>
       <TableContainer component={Paper}>
         <Table sx={{ width: 950 }} aria-label="simple table">
           <TableHead>
@@ -144,10 +160,10 @@ const TableComponent = () => {
                       )}
 
                       {/* here we show arrows for Sorting */}
-                      {/* {{
+                      {{
                         asc: " 🔼",
                         desc: " 🔽",
-                      }[header.column.getIsSorted() as string] ?? null} */}
+                      }[header.column.getIsSorted() as string] ?? null}
 
                       {/* Uncomment the following lines to enable filtering */}
                       {/* {header.column.getCanFilter() && (
@@ -229,7 +245,7 @@ const TableComponent = () => {
           type="button"
           onClick={() => exportExcel(table.getFilteredRowModel().rows)}
         >
-          Downlaod
+          Download
         </button>
       </div>
     </div>
