@@ -12,7 +12,7 @@ import {
   useReactTable,
   PaginationState,
 } from "@tanstack/react-table";
-
+import { Row } from "@tanstack/react-table";
 import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
 import TableCell from "@mui/material/TableCell";
@@ -20,6 +20,7 @@ import TableContainer from "@mui/material/TableContainer";
 import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import Paper from "@mui/material/Paper";
+import { mkConfig, generateCsv, download } from "export-to-csv";
 
 // Create a column helper for the Product type
 const columnHelper = createColumnHelper<Product>();
@@ -87,6 +88,30 @@ const TableComponent = () => {
       pagination,
     },
   });
+  const csvConfig = mkConfig({
+    fieldSeparator: ",",
+    filename: "sample", // export file name (without .csv)
+    decimalSeparator: ".",
+    useKeysAsHeaders: true,
+  });
+
+  // export function DOWNLOAD
+  const exportExcel = (rows: Row<Product>[]) => {
+    const rowData = rows.map((row) => {
+      const original = row.original;
+      return {
+        id: original.id,
+        brand: original.brand,
+        title: original.title,
+        category: original.category,
+        rating: original.rating,
+        price: original.price,
+      };
+    });
+    const csv = generateCsv(csvConfig)(rowData);
+    download(csvConfig)(csv);
+  };
+
   // Display loading state
   if (isLoading) return <div>Loading...</div>;
 
@@ -199,6 +224,13 @@ const TableComponent = () => {
             </option>
           ))}
         </select>
+        <button
+          className="border rounded px-4 py-2 cursor-pointer  hover:bg-slate-500"
+          type="button"
+          onClick={() => exportExcel(table.getFilteredRowModel().rows)}
+        >
+          Downlaod
+        </button>
       </div>
     </div>
   );
