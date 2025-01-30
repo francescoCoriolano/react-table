@@ -10,6 +10,14 @@ export type Product = {
 };
 
 export async function fetchProducts(): Promise<Product[]> {
-  const { data } = await axios.get("https://dummyjson.com/products");
-  return data.products;
+  try {
+    const response = await axios.get<{ products: Product[] }>(
+      "https://dummyjson.com/products"
+      // "https://dummyjson.com/products?limit=10&skip=0"
+    );
+    return response.data.products;
+  } catch (error) {
+    console.error("Error fetching products:", error);
+    throw new Error("Failed to fetch products");
+  }
 }

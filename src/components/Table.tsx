@@ -29,19 +29,16 @@ const columnHelper = createColumnHelper<Product>();
 // Define the columns for the table
 const columns = [
   columnHelper.accessor("id", {
-    cell: (info) => info.getValue(),
+    header: "Id",
   }),
-  columnHelper.accessor((row) => row.brand, {
-    id: "brand",
-    cell: (info) => <i>{info.getValue()}</i>,
-    header: () => <span>Brand</span>,
+  columnHelper.accessor("brand", {
+    header: "Brand",
   }),
   columnHelper.accessor("title", {
-    header: () => "Title",
-    cell: (info) => info.renderValue(),
+    header: "Title",
   }),
   columnHelper.accessor("category", {
-    header: () => <span>Category</span>,
+    header: "Category",
   }),
   columnHelper.accessor("rating", {
     header: "Rating",
@@ -106,6 +103,7 @@ const TableComponent = () => {
   // export function DOWNLOAD
   const exportExcel = (rows: Row<Product>[]) => {
     const rowData = rows.map((row) => {
+      console.log("rows", rows);
       const original = row.original;
       return {
         id: original.id,
@@ -137,60 +135,54 @@ const TableComponent = () => {
           className="text-black"
         />
       </div>
-      <TableContainer component={Paper}>
-        <Table sx={{ width: 950 }} aria-label="simple table">
-          <TableHead>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <TableCell key={header.id}>
-                    <div
-                      className={
-                        header.column.getCanSort()
-                          ? "cursor-pointer select-none"
-                          : ""
-                      }
-                      // this allow sorting on Click
-                      onClick={header.column.getToggleSortingHandler()}
-                    >
-                      {/* here is the header text */}
+      <div className="overflow-x-auto w-[80vw]">
+        <TableContainer component={Paper}>
+          <Table aria-label="simple table">
+            <TableHead>
+              {table.getHeaderGroups().map((headerGroup) => (
+                <TableRow key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => (
+                    <TableCell key={header.id}>
+                      <div
+                        className={
+                          header.column.getCanSort()
+                            ? "cursor-pointer select-none"
+                            : ""
+                        }
+                        // this allow sorting on Click
+                        onClick={header.column.getToggleSortingHandler()}
+                      >
+                        {/* here is the header text */}
+                        {flexRender(
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
+                      </div>
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))}
+            </TableHead>
+            <TableBody>
+              {table.getRowModel().rows.map((row) => (
+                <TableRow
+                  key={row.id}
+                  sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
+                >
+                  {row.getVisibleCells().map((cell) => (
+                    <TableCell key={cell.id} component="th" scope="row">
                       {flexRender(
-                        header.column.columnDef.header,
-                        header.getContext()
+                        cell.column.columnDef.cell,
+                        cell.getContext()
                       )}
-
-                      {/* here we show arrows for Sorting */}
-                      {{
-                        asc: " 🔼",
-                        desc: " 🔽",
-                      }[header.column.getIsSorted() as string] ?? null}
-
-                      {/* Uncomment the following lines to enable filtering */}
-                      {/* {header.column.getCanFilter() && (
-                        <Filter column={header.column} table={table} />
-                      )} */}
-                    </div>
-                  </TableCell>
-                ))}
-              </TableRow>
-            ))}
-          </TableHead>
-          <TableBody>
-            {table.getRowModel().rows.map((row) => (
-              <TableRow
-                key={row.id}
-                sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
-              >
-                {row.getVisibleCells().map((cell) => (
-                  <TableCell key={cell.id} component="th" scope="row">
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </TableCell>
-                ))}
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </div>
       <div className="flex items-center justify-end gap-2 p-5 ">
         <button
           className="border rounded px-4 py-2 cursor-pointer  hover:bg-slate-500"
