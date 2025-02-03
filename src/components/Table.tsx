@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { fetchProducts, fetchProductsByCategory, Product } from "@/api/getData";
+import { fetchProductsByCategory, Product } from "@/api/getData";
 import {
   createColumnHelper,
   flexRender,
@@ -12,9 +12,9 @@ import {
   useReactTable,
   PaginationState,
   filterFns,
+  Row,
 } from "@tanstack/react-table";
 import { useDebounce } from "@uidotdev/usehooks";
-import { Row } from "@tanstack/react-table";
 import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
 import TableCell from "@mui/material/TableCell";
@@ -51,37 +51,28 @@ const columns = [
 
 // Define the TableComponent
 const TableComponent = () => {
-  // Custom hook to fetch products using react-query
-  function useProducts() {
-    return useQuery<Product[]>({
-      queryKey: ["products"],
-      queryFn: fetchProducts,
-      //queryFn: fetchProducts,
-    });
-  }
-
-  // Fetch products data
-  const { data, error, isLoading, refetch } = useProducts();
-  console.log("dataaaa", data);
-
-  // Refetch data on component mount
-  useEffect(() => {
-    refetch();
-  }, []);
-  {
-    /* ++++++++++++++++++++++++++++++++++++++ */
-  }
-  // Custom filter by Category
-
-  const [searchTermCategory, setSearchTermCategory] = useState("beauty");
+  // State for category search term and results
+  const [searchTermCategory, setSearchTermCategory] = useState("");
   const [resultsCategory, setResultsCategory] = useState<Product[]>([]);
-  const [isSearchingCategory, setIsSearchingCategory] = useState(false);
   const debouncedSearchTermCategory = useDebounce(searchTermCategory, 300);
 
+  // Fetch products data using react-query
+  // const { error, isLoading, refetch } = useQuery<Product[]>({
+  //   queryKey: ["products"],
+  //   queryFn: fetchProducts,
+  // });
+
+  // Refetch data on component mount
+  // useEffect(() => {
+  //   refetch();
+  // }, [refetch]);
+
+  // Handle category input change
   const handleChangeCategory = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTermCategory(e.target.value);
   };
 
+  // Handle form submit for category search
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
@@ -93,25 +84,17 @@ const TableComponent = () => {
     e.currentTarget.focus();
   };
 
+  // Fetch products by category when search term changes
   useEffect(() => {
     const searchC = async () => {
-      let results: Product[] = [];
-      setIsSearchingCategory(true);
-      if (debouncedSearchTermCategory) {
-        const dataCategory = await fetchProductsByCategory({
-          queryKey: ["category", debouncedSearchTermCategory],
-        });
-        results = dataCategory || [];
-      }
-      setIsSearchingCategory(false);
-      setResultsCategory(results);
-      console.log("resultsss", results);
+      const dataCategory = await fetchProductsByCategory({
+        queryKey: ["category", debouncedSearchTermCategory],
+      });
+      setResultsCategory(dataCategory || []);
     };
     searchC();
   }, [debouncedSearchTermCategory]);
-  {
-    /* ++++++++++++++++++++++++++++++++++++++ */
-  }
+
   // State for pagination
   const [pagination, setPagination] = useState<PaginationState>({
     pageIndex: 0,
@@ -125,7 +108,6 @@ const TableComponent = () => {
   const table = useReactTable({
     columns,
     data: resultsCategory ?? [],
-    debugTable: true,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
@@ -139,6 +121,7 @@ const TableComponent = () => {
     onGlobalFilterChange: setGlobalFilter,
   });
 
+  // Configuration for CSV export
   const csvConfig = mkConfig({
     fieldSeparator: ",",
     filename: "sample",
@@ -146,10 +129,9 @@ const TableComponent = () => {
     useKeysAsHeaders: true,
   });
 
-  // export function DOWNLOAD
+  // Function to export table data to CSV
   const exportExcel = (rows: Row<Product>[]) => {
     const rowData = rows.map((row) => {
-      console.log("rows", rows);
       const original = row.original;
       return {
         id: original.id,
@@ -165,10 +147,10 @@ const TableComponent = () => {
   };
 
   // Display loading state
-  if (isLoading) return <div>Loading...</div>;
+  // if (isLoading) return <div>Loading...</div>;
 
-  // Display error state
-  if (error) return <div>Error loading products</div>;
+  // // Display error state
+  // if (error) return <div>Error loading products</div>;
 
   // Render the table
   return (
@@ -183,7 +165,6 @@ const TableComponent = () => {
             className="text-black"
           />
         </div>
-        {/* ++++++++++++++++++++++++++++++++++++++ */}
         <div className="p-10">
           <h3>Filter category:</h3>
           <form onSubmit={handleSubmit}>
@@ -193,16 +174,8 @@ const TableComponent = () => {
               onChange={handleChangeCategory}
               className="text-black"
             />
-            <button
-              className="primary"
-              disabled={isSearchingCategory}
-              type="submit"
-            >
-              {isSearchingCategory ? "..." : "Search"}
-            </button>
           </form>
         </div>
-        {/* ++++++++++++++++++++++++++++++++++++++ */}
       </div>
       <div className="overflow-x-auto w-[80vw]">
         <TableContainer component={Paper}>
@@ -212,11 +185,7 @@ const TableComponent = () => {
                 <TableRow key={headerGroup.id}>
                   {headerGroup.headers.map((header) => (
                     <TableCell key={header.id}>
-                      <div
-                        // this allow sorting on Click
-                        onClick={header.column.getToggleSortingHandler()}
-                      >
-                        {/* here is the header text */}
+                      <div onClick={header.column.getToggleSortingHandler()}>
                         {flexRender(
                           header.column.columnDef.header,
                           header.getContext()
@@ -249,28 +218,28 @@ const TableComponent = () => {
       </div>
       <div className="flex items-center justify-end gap-2 p-5 ">
         <button
-          className="border rounded px-4 py-2 cursor-pointer  hover:bg-slate-500"
+          className="border rounded px-4 py-2 cursor-pointer hover:bg-slate-500"
           onClick={() => table.firstPage()}
           disabled={!table.getCanPreviousPage()}
         >
           {"<<"}
         </button>
         <button
-          className="border rounded px-4 py-2 cursor-pointer  hover:bg-slate-500"
+          className="border rounded px-4 py-2 cursor-pointer hover:bg-slate-500"
           onClick={() => table.previousPage()}
           disabled={!table.getCanPreviousPage()}
         >
           {"<"}
         </button>
         <button
-          className="border rounded px-4 py-2 cursor-pointer  hover:bg-slate-500"
+          className="border rounded px-4 py-2 cursor-pointer hover:bg-slate-500"
           onClick={() => table.nextPage()}
           disabled={!table.getCanNextPage()}
         >
           {">"}
         </button>
         <button
-          className="border rounded px-4 py-2 cursor-pointer  hover:bg-slate-500"
+          className="border rounded px-4 py-2 cursor-pointer hover:bg-slate-500"
           onClick={() => table.lastPage()}
           disabled={!table.getCanNextPage()}
         >
@@ -283,7 +252,6 @@ const TableComponent = () => {
             {table.getPageCount().toLocaleString()}
           </strong>
         </span>
-
         <select
           value={table.getState().pagination.pageSize}
           onChange={(e) => {
@@ -297,7 +265,7 @@ const TableComponent = () => {
           ))}
         </select>
         <button
-          className="border rounded px-4 py-2 cursor-pointer  hover:bg-slate-500"
+          className="border rounded px-4 py-2 cursor-pointer hover:bg-slate-500"
           type="button"
           onClick={() => exportExcel(table.getFilteredRowModel().rows)}
         >
