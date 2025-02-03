@@ -145,7 +145,14 @@ const TableComponent = () => {
     const csv = generateCsv(csvConfig)(rowData);
     download(csvConfig)(csv);
   };
+  // Handle focus events to clear the other input
+  const handleGlobalFilterFocus = () => {
+    setSearchTermCategory("");
+  };
 
+  const handleCategoryFocus = () => {
+    setGlobalFilter("");
+  };
   // Display loading state
   // if (isLoading) return <div>Loading...</div>;
 
@@ -163,6 +170,7 @@ const TableComponent = () => {
             onChange={(e) => setGlobalFilter(e.target.value)}
             placeholder="Search..."
             className="text-black"
+            onFocus={handleGlobalFilterFocus}
           />
         </div>
         <div className="p-10">
@@ -173,6 +181,7 @@ const TableComponent = () => {
               placeholder="Search category"
               onChange={handleChangeCategory}
               className="text-black"
+              onFocus={handleCategoryFocus}
             />
           </form>
         </div>
@@ -197,21 +206,28 @@ const TableComponent = () => {
               ))}
             </TableHead>
             <TableBody>
-              {table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id} component="th" scope="row">
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </TableCell>
-                  ))}
+              {resultsCategory.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={columns.length}>
+                    <div className="w-full h-[50vh] flex items-center justify-center">
+                      <h4>No data available</h4>
+                    </div>
+                  </TableCell>
                 </TableRow>
-              ))}
+              ) : (
+                table.getRowModel().rows.map((row) => (
+                  <TableRow key={row.id}>
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell key={cell.id}>
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </TableContainer>
