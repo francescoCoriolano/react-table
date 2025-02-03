@@ -57,16 +57,27 @@ const TableComponent = () => {
   const debouncedSearchTermCategory = useDebounce(searchTermCategory, 300);
 
   // Fetch products data using react-query
-  // const { error, isLoading, refetch } = useQuery<Product[]>({
+  // const { data, error, isLoading, refetch } = useQuery<Product[]>({
   //   queryKey: ["products"],
+  //   queryKey: ["category", debouncedSearchTermCategory],
   //   queryFn: fetchProducts,
   // });
 
   // Refetch data on component mount
   // useEffect(() => {
   //   refetch();
-  // }, [refetch]);
+  // }, [refetch,debouncedSearchTermCategory]);
 
+  // Fetch products by category when search term changes
+  useEffect(() => {
+    const searchC = async () => {
+      const dataCategory = await fetchProductsByCategory({
+        queryKey: ["category", debouncedSearchTermCategory],
+      });
+      setResultsCategory(dataCategory || []);
+    };
+    searchC();
+  }, [debouncedSearchTermCategory]);
   // Handle category input change
   const handleChangeCategory = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTermCategory(e.target.value);
@@ -83,17 +94,6 @@ const TableComponent = () => {
     e.currentTarget.reset();
     e.currentTarget.focus();
   };
-
-  // Fetch products by category when search term changes
-  useEffect(() => {
-    const searchC = async () => {
-      const dataCategory = await fetchProductsByCategory({
-        queryKey: ["category", debouncedSearchTermCategory],
-      });
-      setResultsCategory(dataCategory || []);
-    };
-    searchC();
-  }, [debouncedSearchTermCategory]);
 
   // State for pagination
   const [pagination, setPagination] = useState<PaginationState>({
