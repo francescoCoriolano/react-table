@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { fetchProducts, Product } from "@/api/getData";
+import { fetchProducts, fetchProductsByCategory, Product } from "@/api/getData";
 import {
   createColumnHelper,
   flexRender,
@@ -13,6 +13,7 @@ import {
   PaginationState,
   filterFns,
 } from "@tanstack/react-table";
+import { useDebounce } from "@uidotdev/usehooks";
 import { Row } from "@tanstack/react-table";
 import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
@@ -55,17 +56,62 @@ const TableComponent = () => {
     return useQuery<Product[]>({
       queryKey: ["products"],
       queryFn: fetchProducts,
+      //queryFn: fetchProducts,
     });
   }
 
   // Fetch products data
   const { data, error, isLoading, refetch } = useProducts();
+  console.log("dataaaa", data);
 
   // Refetch data on component mount
   useEffect(() => {
     refetch();
   }, []);
+  {
+    /* ++++++++++++++++++++++++++++++++++++++ */
+  }
+  // Custom filter by Category
 
+  const [searchTermCategory, setSearchTermCategory] = useState("beauty");
+  const [resultsCategory, setResultsCategory] = useState<Product[]>([]);
+  const [isSearchingCategory, setIsSearchingCategory] = useState(false);
+  const debouncedSearchTermCategory = useDebounce(searchTermCategory, 300);
+
+  const handleChangeCategory = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTermCategory(e.target.value);
+  };
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    const searchValue = formData.get("search");
+    if (typeof searchValue === "string") {
+      setSearchTermCategory(searchValue);
+    }
+    e.currentTarget.reset();
+    e.currentTarget.focus();
+  };
+
+  useEffect(() => {
+    const searchC = async () => {
+      let results: Product[] = [];
+      setIsSearchingCategory(true);
+      if (debouncedSearchTermCategory) {
+        const dataCategory = await fetchProductsByCategory({
+          queryKey: ["category", debouncedSearchTermCategory],
+        });
+        results = dataCategory || [];
+      }
+      setIsSearchingCategory(false);
+      setResultsCategory(results);
+      console.log("resultsss", results);
+    };
+    searchC();
+  }, [debouncedSearchTermCategory]);
+  {
+    /* ++++++++++++++++++++++++++++++++++++++ */
+  }
   // State for pagination
   const [pagination, setPagination] = useState<PaginationState>({
     pageIndex: 0,
@@ -78,7 +124,7 @@ const TableComponent = () => {
   // Initialize the table with react-table
   const table = useReactTable({
     columns,
-    data: data ?? [],
+    data: resultsCategory ?? [],
     debugTable: true,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
@@ -127,13 +173,36 @@ const TableComponent = () => {
   // Render the table
   return (
     <div className="pt-10">
-      <div className="p-10">
-        <input
-          value={globalFilter}
-          onChange={(e) => setGlobalFilter(e.target.value)}
-          placeholder="Search..."
-          className="text-black"
-        />
+      <div className="flex">
+        <div className="p-10">
+          <h3>Filter globally:</h3>
+          <input
+            value={globalFilter}
+            onChange={(e) => setGlobalFilter(e.target.value)}
+            placeholder="Search..."
+            className="text-black"
+          />
+        </div>
+        {/* ++++++++++++++++++++++++++++++++++++++ */}
+        <div className="p-10">
+          <h3>Filter category:</h3>
+          <form onSubmit={handleSubmit}>
+            <input
+              name="search"
+              placeholder="Search category"
+              onChange={handleChangeCategory}
+              className="text-black"
+            />
+            <button
+              className="primary"
+              disabled={isSearchingCategory}
+              type="submit"
+            >
+              {isSearchingCategory ? "..." : "Search"}
+            </button>
+          </form>
+        </div>
+        {/* ++++++++++++++++++++++++++++++++++++++ */}
       </div>
       <div className="overflow-x-auto w-[80vw]">
         <TableContainer component={Paper}>
@@ -144,11 +213,6 @@ const TableComponent = () => {
                   {headerGroup.headers.map((header) => (
                     <TableCell key={header.id}>
                       <div
-                        className={
-                          header.column.getCanSort()
-                            ? "cursor-pointer select-none"
-                            : ""
-                        }
                         // this allow sorting on Click
                         onClick={header.column.getToggleSortingHandler()}
                       >
