@@ -58,8 +58,8 @@ const columns = [
 // Define the TableComponent
 const TableComponent = () => {
   // State for category search term and results
+  const [results, setResults] = useState<Product[]>([]);
   const [searchTermCategory, setSearchTermCategory] = useState("");
-  const [resultsCategory, setResultsCategory] = useState<Product[]>([]);
   const debouncedSearchTermCategory = useDebounce(searchTermCategory, 300);
 
   // Fetch products data using react-query
@@ -80,22 +80,10 @@ const TableComponent = () => {
       const dataCategory = await fetchProductsByCategory({
         queryKey: ["category", debouncedSearchTermCategory],
       });
-      setResultsCategory(dataCategory || []);
+      setResults(dataCategory || []);
     };
     searchC();
   }, [debouncedSearchTermCategory]);
-
-  // Handle form submit for category search
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const formData = new FormData(e.currentTarget);
-    const searchValue = formData.get("search");
-    if (typeof searchValue === "string") {
-      setSearchTermCategory(searchValue);
-    }
-    e.currentTarget.reset();
-    e.currentTarget.focus();
-  };
 
   // State for pagination
   const [pagination, setPagination] = useState<PaginationState>({
@@ -109,7 +97,7 @@ const TableComponent = () => {
   // Initialize the table with react-table
   const table = useReactTable({
     columns,
-    data: resultsCategory ?? [],
+    data: results ?? [],
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
@@ -162,7 +150,7 @@ const TableComponent = () => {
   // if (error) return <div>Error loading products</div>;
 
   // // Display error state
-  if (!resultsCategory) return <div>Error loading products</div>;
+  if (!results) return <div>Error loading products</div>;
   // Render the table
   return (
     <div className="pt-10">
@@ -179,17 +167,16 @@ const TableComponent = () => {
         </div>
         <div className="p-10">
           <h3>Filter category:</h3>
-          <form onSubmit={handleSubmit}>
-            <input
-              name="search"
-              value={searchTermCategory}
-              placeholder="Search category"
-              //onChange={handleChangeCategory}
-              onChange={(e) => setSearchTermCategory(e.target.value)}
-              className="text-black"
-              onFocus={handleCategoryFocus}
-            />
-          </form>
+
+          <input
+            name="search"
+            value={searchTermCategory}
+            placeholder="Search category"
+            //onChange={handleChangeCategory}
+            onChange={(e) => setSearchTermCategory(e.target.value)}
+            className="text-black"
+            onFocus={handleCategoryFocus}
+          />
         </div>
       </div>
       <div className="overflow-x-auto w-[80vw]">
@@ -215,7 +202,7 @@ const TableComponent = () => {
               ))}
             </TableHead>
             <TableBody>
-              {resultsCategory.length === 0 ? (
+              {results.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={columns.length}>
                     <div className="w-full h-[50vh] flex items-center justify-center">
