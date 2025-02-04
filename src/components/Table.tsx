@@ -31,21 +31,27 @@ const columnHelper = createColumnHelper<Product>();
 const columns = [
   columnHelper.accessor("id", {
     header: "Id",
+    size: 50,
   }),
   columnHelper.accessor("brand", {
     header: "Brand",
+    size: 150,
   }),
   columnHelper.accessor("title", {
     header: "Title",
+    size: 200,
   }),
   columnHelper.accessor("category", {
     header: "Category",
+    size: 100,
   }),
   columnHelper.accessor("rating", {
     header: "Rating",
+    size: 100,
   }),
   columnHelper.accessor("price", {
     header: "Price",
+    size: 100,
   }),
 ];
 
@@ -155,6 +161,8 @@ const TableComponent = () => {
   // // Display error state
   // if (error) return <div>Error loading products</div>;
 
+  // // Display error state
+  if (!resultsCategory) return <div>Error loading products</div>;
   // Render the table
   return (
     <div className="pt-10">
@@ -191,7 +199,10 @@ const TableComponent = () => {
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow key={headerGroup.id}>
                   {headerGroup.headers.map((header) => (
-                    <TableCell key={header.id}>
+                    <TableCell
+                      key={header.id}
+                      style={{ width: header.column.columnDef.size }}
+                    >
                       <div onClick={header.column.getToggleSortingHandler()}>
                         {flexRender(
                           header.column.columnDef.header,
