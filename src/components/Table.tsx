@@ -78,10 +78,6 @@ const TableComponent = () => {
     };
     searchC();
   }, [debouncedSearchTermCategory]);
-  // Handle category input change
-  const handleChangeCategory = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTermCategory(e.target.value);
-  };
 
   // Handle form submit for category search
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -178,8 +174,10 @@ const TableComponent = () => {
           <form onSubmit={handleSubmit}>
             <input
               name="search"
+              value={searchTermCategory}
               placeholder="Search category"
-              onChange={handleChangeCategory}
+              //onChange={handleChangeCategory}
+              onChange={(e) => setSearchTermCategory(e.target.value)}
               className="text-black"
               onFocus={handleCategoryFocus}
             />
