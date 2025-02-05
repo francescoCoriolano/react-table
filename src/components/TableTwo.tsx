@@ -55,7 +55,7 @@ const columns = [
 ];
 
 // Define the TableComponent
-const TableComponent = () => {
+const TableTwo = () => {
   // State for category search term and results
   const [results, setResults] = useState<Product[]>([]);
   const [searchTermCategory, setSearchTermCategory] = useState("");
@@ -136,7 +136,7 @@ const TableComponent = () => {
   // Render the table
   return (
     <div className="pt-10">
-      <div className="flex">
+      <div className="flex items-center justify-between gap-10">
         <div className="p-10">
           <h3>Filter globally:</h3>
           <input
@@ -270,4 +270,4 @@ const TableComponent = () => {
   );
 };
 
-export default TableComponent;
+export default TableTwo;

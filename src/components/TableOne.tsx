@@ -62,9 +62,7 @@ const columns = [
 ];
 
 // Define the TableComponent
-const TableComponent2 = () => {
-  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
-
+const TableOne = () => {
   // Custom hook to fetch products using react-query
   function useProducts() {
     return useQuery<Product[]>({
@@ -75,21 +73,17 @@ const TableComponent2 = () => {
 
   // Fetch products data
   const { data, error, isLoading, refetch } = useProducts();
-
-  // Refetch data on component mount
-  useEffect(() => {
-    refetch();
-  }, []);
-
-  // State for pagination
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]); // State for column filters
+  const [globalFilter, setGlobalFilter] = useState<string>(""); // State for global filter
+  const debouncedGlobalFilter = useDebounce(globalFilter, 300); // Delay search updates
   const [pagination, setPagination] = useState<PaginationState>({
     pageIndex: 0,
     pageSize: 10,
   });
-
-  // State for global filter
-  const [globalFilter, setGlobalFilter] = useState<string>("");
-  const debouncedGlobalFilter = useDebounce(globalFilter, 300); // Delay search updates
+  // Refetch data on component mount
+  useEffect(() => {
+    refetch();
+  }, [refetch]);
 
   //Initialize the table with react-table
   const table = useReactTable({
@@ -281,4 +275,4 @@ const TableComponent2 = () => {
   );
 };
 
-export default TableComponent2;
+export default TableOne;
