@@ -1,13 +1,12 @@
 // import InfiniteScrollTable from "@/components/TablseInfiniteScroll";
-import Table2 from "@/components/Table2";
-import Table from "../components/Table";
+import TableOne from "@/components/TableOne";
+import TableTwo from "../components/TableTwo";
 
 export default function Home() {
   return (
     <div className="flex flex-col justify-center items-center">
-      <Table2 />
-      <Table />
-      {/* <InfiniteScrollTable /> */}
+      <TableOne />
+      <TableTwo />
     </div>
   );
 }

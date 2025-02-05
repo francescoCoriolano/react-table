@@ -1,23 +1,19 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { fetchProducts, Product } from "@/api/getData";
-import { useDebounce } from "@uidotdev/usehooks";
-
-import Filter from "./Filter";
+import { fetchProductsByCategory, Product } from "@/api/getData";
 import {
   createColumnHelper,
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
   getPaginationRowModel,
-  ColumnFiltersState,
   getSortedRowModel,
   useReactTable,
   PaginationState,
   filterFns,
+  Row,
 } from "@tanstack/react-table";
-import { Row } from "@tanstack/react-table";
+import { useDebounce } from "@uidotdev/usehooks";
 import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
 import TableCell from "@mui/material/TableCell";
@@ -30,7 +26,7 @@ import { mkConfig, generateCsv, download } from "export-to-csv";
 // Create a column helper for the Product type
 const columnHelper = createColumnHelper<Product>();
 
-// Define the columns
+// Define the columns for the table
 const columns = [
   columnHelper.accessor("id", {
     header: "Id",
@@ -47,9 +43,6 @@ const columns = [
   columnHelper.accessor("category", {
     header: "Category",
     size: 100,
-    meta: {
-      filterVariant: "select",
-    },
   }),
   columnHelper.accessor("rating", {
     header: "Rating",
@@ -62,24 +55,22 @@ const columns = [
 ];
 
 // Define the TableComponent
-const TableComponent2 = () => {
-  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+const TableComponent = () => {
+  // State for category search term and results
+  const [results, setResults] = useState<Product[]>([]);
+  const [searchTermCategory, setSearchTermCategory] = useState("");
+  const debouncedSearchTermCategory = useDebounce(searchTermCategory, 300);
 
-  // Custom hook to fetch products using react-query
-  function useProducts() {
-    return useQuery<Product[]>({
-      queryKey: ["products"],
-      queryFn: fetchProducts,
-    });
-  }
-
-  // Fetch products data
-  const { data, error, isLoading, refetch } = useProducts();
-
-  // Refetch data on component mount
+  // Fetch products by category when search term changes
   useEffect(() => {
-    refetch();
-  }, []);
+    const searchC = async () => {
+      const dataCategory = await fetchProductsByCategory({
+        queryKey: ["category", debouncedSearchTermCategory],
+      });
+      setResults(dataCategory || []);
+    };
+    searchC();
+  }, [debouncedSearchTermCategory]);
 
   // State for pagination
   const [pagination, setPagination] = useState<PaginationState>({
@@ -89,14 +80,12 @@ const TableComponent2 = () => {
 
   // State for global filter
   const [globalFilter, setGlobalFilter] = useState<string>("");
-  const debouncedGlobalFilter = useDebounce(globalFilter, 300); // Delay search updates
+  //const debouncedSearchTermGlobal = useDebounce(globalFilter, 300);
 
-  //Initialize the table with react-table
+  // Initialize the table with react-table
   const table = useReactTable({
     columns,
-    data: data ?? [],
-    debugTable: true,
-    onColumnFiltersChange: setColumnFilters,
+    data: results ?? [],
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
@@ -104,13 +93,12 @@ const TableComponent2 = () => {
     onPaginationChange: setPagination,
     globalFilterFn: filterFns.includesString,
     state: {
-      columnFilters,
       pagination,
-      globalFilter: debouncedGlobalFilter,
+      globalFilter,
     },
     onGlobalFilterChange: setGlobalFilter,
   });
-
+  // Configuration for CSV export
   const csvConfig = mkConfig({
     fieldSeparator: ",",
     filename: "sample",
@@ -118,10 +106,9 @@ const TableComponent2 = () => {
     useKeysAsHeaders: true,
   });
 
-  // export function DOWNLOAD
+  // Function to export table data to CSV
   const exportExcel = (rows: Row<Product>[]) => {
     const rowData = rows.map((row) => {
-      console.log("rows", rows);
       const original = row.original;
       return {
         id: original.id,
@@ -135,25 +122,45 @@ const TableComponent2 = () => {
     const csv = generateCsv(csvConfig)(rowData);
     download(csvConfig)(csv);
   };
+  // Handle focus events to clear the other input
+  const handleGlobalFilterFocus = () => {
+    setSearchTermCategory("");
+  };
 
-  // Display loading state
-  if (isLoading) return <div>Loading...</div>;
+  const handleCategoryFocus = () => {
+    setGlobalFilter("");
+  };
 
-  // Display error state
-  if (error) return <div>Error loading products</div>;
-
+  // // Display error state
+  if (!results) return <div>Error loading products</div>;
   // Render the table
   return (
     <div className="pt-10">
-      <div className="p-10">
-        <input
-          value={globalFilter}
-          onChange={(e) => setGlobalFilter(e.target.value)}
-          placeholder="Search..."
-          className="text-black"
-        />
-      </div>
+      <div className="flex">
+        <div className="p-10">
+          <h3>Filter globally:</h3>
+          <input
+            value={globalFilter}
+            onChange={(e) => setGlobalFilter(e.target.value)}
+            placeholder="Search..."
+            className="text-black"
+            onFocus={handleGlobalFilterFocus}
+          />
+        </div>
+        <div className="p-10">
+          <h3>Filter category:</h3>
 
+          <input
+            name="search"
+            value={searchTermCategory}
+            placeholder="Search category"
+            //onChange={handleChangeCategory}
+            onChange={(e) => setSearchTermCategory(e.target.value)}
+            className="text-black"
+            onFocus={handleCategoryFocus}
+          />
+        </div>
+      </div>
       <div className="overflow-x-auto w-[80vw]">
         <TableContainer component={Paper}>
           <Table aria-label="simple table">
@@ -165,25 +172,11 @@ const TableComponent2 = () => {
                       key={header.id}
                       style={{ width: header.column.columnDef.size }}
                     >
-                      <div
-                        className={
-                          header.column.getCanSort()
-                            ? "cursor-pointer select-none"
-                            : ""
-                        }
-                        // this allow sorting on Click
-                        onClick={header.column.getToggleSortingHandler()}
-                      >
-                        {/* here is the header text */}
+                      <div onClick={header.column.getToggleSortingHandler()}>
                         {flexRender(
                           header.column.columnDef.header,
                           header.getContext()
                         )}
-                        {header.column.getCanFilter() ? (
-                          <div>
-                            <Filter column={header.column} />
-                          </div>
-                        ) : null}
                       </div>
                     </TableCell>
                   ))}
@@ -201,12 +194,9 @@ const TableComponent2 = () => {
                 </TableRow>
               ) : (
                 table.getRowModel().rows.map((row) => (
-                  <TableRow
-                    key={row.id}
-                    sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
-                  >
+                  <TableRow key={row.id}>
                     {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id} component="th" scope="row">
+                      <TableCell key={cell.id}>
                         {flexRender(
                           cell.column.columnDef.cell,
                           cell.getContext()
@@ -222,28 +212,28 @@ const TableComponent2 = () => {
       </div>
       <div className="flex items-center justify-end gap-2 p-5 ">
         <button
-          className="border rounded px-4 py-2 cursor-pointer  hover:bg-slate-500"
+          className="border rounded px-4 py-2 cursor-pointer hover:bg-slate-500"
           onClick={() => table.firstPage()}
           disabled={!table.getCanPreviousPage()}
         >
           {"<<"}
         </button>
         <button
-          className="border rounded px-4 py-2 cursor-pointer  hover:bg-slate-500"
+          className="border rounded px-4 py-2 cursor-pointer hover:bg-slate-500"
           onClick={() => table.previousPage()}
           disabled={!table.getCanPreviousPage()}
         >
           {"<"}
         </button>
         <button
-          className="border rounded px-4 py-2 cursor-pointer  hover:bg-slate-500"
+          className="border rounded px-4 py-2 cursor-pointer hover:bg-slate-500"
           onClick={() => table.nextPage()}
           disabled={!table.getCanNextPage()}
         >
           {">"}
         </button>
         <button
-          className="border rounded px-4 py-2 cursor-pointer  hover:bg-slate-500"
+          className="border rounded px-4 py-2 cursor-pointer hover:bg-slate-500"
           onClick={() => table.lastPage()}
           disabled={!table.getCanNextPage()}
         >
@@ -256,7 +246,6 @@ const TableComponent2 = () => {
             {table.getPageCount().toLocaleString()}
           </strong>
         </span>
-
         <select
           value={table.getState().pagination.pageSize}
           onChange={(e) => {
@@ -270,7 +259,7 @@ const TableComponent2 = () => {
           ))}
         </select>
         <button
-          className="border rounded px-4 py-2 cursor-pointer  hover:bg-slate-500"
+          className="border rounded px-4 py-2 cursor-pointer hover:bg-slate-500"
           type="button"
           onClick={() => exportExcel(table.getFilteredRowModel().rows)}
         >
@@ -281,4 +270,4 @@ const TableComponent2 = () => {
   );
 };
 
-export default TableComponent2;
+export default TableComponent;
