@@ -110,7 +110,6 @@ const TableComponent = () => {
     },
     onGlobalFilterChange: setGlobalFilter,
   });
-
   // Configuration for CSV export
   const csvConfig = mkConfig({
     fieldSeparator: ",",
@@ -203,7 +202,7 @@ const TableComponent = () => {
               ))}
             </TableHead>
             <TableBody>
-              {results.length === 0 ? (
+              {table.getRowModel().rows.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={columns.length}>
                     <div className="w-full h-[50vh] flex items-center justify-center">

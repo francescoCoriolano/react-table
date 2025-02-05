@@ -2,6 +2,9 @@
 import React, { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { fetchProducts, Product } from "@/api/getData";
+import { useDebounce } from "@uidotdev/usehooks";
+
+import Filter from "./Filter";
 import {
   createColumnHelper,
   flexRender,
@@ -13,8 +16,6 @@ import {
   useReactTable,
   PaginationState,
   filterFns,
-  Column,
-  RowData,
 } from "@tanstack/react-table";
 import { Row } from "@tanstack/react-table";
 import Table from "@mui/material/Table";
@@ -29,35 +30,41 @@ import { mkConfig, generateCsv, download } from "export-to-csv";
 // Create a column helper for the Product type
 const columnHelper = createColumnHelper<Product>();
 
-// Define the columns for the table
+// Define the columns
 const columns = [
   columnHelper.accessor("id", {
     header: "Id",
+    size: 50,
   }),
   columnHelper.accessor("brand", {
     header: "Brand",
+    size: 150,
   }),
   columnHelper.accessor("title", {
     header: "Title",
+    size: 200,
   }),
   columnHelper.accessor("category", {
     header: "Category",
+    size: 100,
     meta: {
       filterVariant: "select",
     },
   }),
   columnHelper.accessor("rating", {
     header: "Rating",
+    size: 100,
   }),
   columnHelper.accessor("price", {
     header: "Price",
+    size: 100,
   }),
 ];
 
 // Define the TableComponent
 const TableComponent2 = () => {
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
-  console.log("columnFilters", columnFilters);
+
   // Custom hook to fetch products using react-query
   function useProducts() {
     return useQuery<Product[]>({
@@ -82,6 +89,7 @@ const TableComponent2 = () => {
 
   // State for global filter
   const [globalFilter, setGlobalFilter] = useState<string>("");
+  const debouncedGlobalFilter = useDebounce(globalFilter, 300); // Delay search updates
 
   //Initialize the table with react-table
   const table = useReactTable({
@@ -98,7 +106,7 @@ const TableComponent2 = () => {
     state: {
       columnFilters,
       pagination,
-      globalFilter,
+      globalFilter: debouncedGlobalFilter,
     },
     onGlobalFilterChange: setGlobalFilter,
   });
@@ -153,7 +161,10 @@ const TableComponent2 = () => {
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow key={headerGroup.id}>
                   {headerGroup.headers.map((header) => (
-                    <TableCell key={header.id}>
+                    <TableCell
+                      key={header.id}
+                      style={{ width: header.column.columnDef.size }}
+                    >
                       <div
                         className={
                           header.column.getCanSort()
@@ -180,21 +191,31 @@ const TableComponent2 = () => {
               ))}
             </TableHead>
             <TableBody>
-              {table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id} component="th" scope="row">
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </TableCell>
-                  ))}
+              {table.getRowModel().rows.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={columns.length}>
+                    <div className="w-full h-[50vh] flex items-center justify-center">
+                      <h4>No data available</h4>
+                    </div>
+                  </TableCell>
                 </TableRow>
-              ))}
+              ) : (
+                table.getRowModel().rows.map((row) => (
+                  <TableRow
+                    key={row.id}
+                    sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell key={cell.id} component="th" scope="row">
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </TableContainer>
@@ -261,36 +282,3 @@ const TableComponent2 = () => {
 };
 
 export default TableComponent2;
-
-declare module "@tanstack/react-table" {
-  //allows us to define custom properties for our columns
-  interface ColumnMeta<TData extends RowData, TValue> {
-    filterVariant?: "text" | "range" | "select";
-  }
-}
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function Filter({ column }: { column: Column<any, unknown> }) {
-  const columnFilterValue = column.getFilterValue();
-  const { filterVariant } = column.columnDef.meta ?? {};
-
-  return filterVariant === "range" ? (
-    <div>
-      <div className="h-1" />
-    </div>
-  ) : filterVariant === "select" ? (
-    <select
-      style={{ backgroundColor: "red" }}
-      onChange={(e) => column.setFilterValue(e.target.value)}
-      value={columnFilterValue?.toString()}
-    >
-      {/* See faceted column filters example for dynamic select options */}
-      <option value="">All</option>
-      <option value="beauty">beauty</option>
-      <option value="fragrances">fragrances</option>
-      <option value="furniture">furniture</option>
-      <option value="groceries">groceries</option>
-    </select>
-  ) : (
-    <div>empty div</div>
-  );
-}
