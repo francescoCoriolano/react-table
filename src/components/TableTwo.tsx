@@ -154,7 +154,6 @@ const TableTwo = () => {
             name="search"
             value={searchTermCategory}
             placeholder="Search category"
-            //onChange={handleChangeCategory}
             onChange={(e) => setSearchTermCategory(e.target.value)}
             className="text-black"
             onFocus={handleCategoryFocus}

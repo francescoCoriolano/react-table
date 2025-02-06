@@ -138,16 +138,29 @@ const TableOne = () => {
   // Render the table
   return (
     <div className="pt-10">
-      <div className="p-10">
-        <h3>Filter globally:</h3>
-        <input
-          value={globalFilter}
-          onChange={(e) => setGlobalFilter(e.target.value)}
-          placeholder="Search..."
-          className="text-black"
-        />
+      <div className="flex items-center justify-between">
+        <div className="p-10 ">
+          <h3>Filter globally:</h3>
+          <input
+            value={globalFilter}
+            onChange={(e) => setGlobalFilter(e.target.value)}
+            placeholder="Search..."
+            className="text-black"
+          />
+        </div>
+        <div className="p-10 ">
+          <h3>Category Filters:</h3>
+          {table.getHeaderGroups().map((headerGroup) =>
+            headerGroup.headers.map((header) =>
+              header.column.getCanFilter() && header.id === "category" ? (
+                <div key={header.id}>
+                  <Filter column={header.column} />
+                </div>
+              ) : null
+            )
+          )}
+        </div>
       </div>
-
       <div className="overflow-x-auto w-[80vw]">
         <TableContainer component={Paper}>
           <Table aria-label="simple table">
@@ -173,11 +186,6 @@ const TableOne = () => {
                           header.column.columnDef.header,
                           header.getContext()
                         )}
-                        {header.column.getCanFilter() ? (
-                          <div>
-                            <Filter column={header.column} />
-                          </div>
-                        ) : null}
                       </div>
                     </TableCell>
                   ))}
