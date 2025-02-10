@@ -130,7 +130,12 @@ const TableOne = () => {
   };
 
   // Display loading state
-  if (isLoading) return <div>Loading...</div>;
+  if (isLoading)
+    return (
+      <div className="h-[100vh] w-[100vw] flex justify-center items-center ">
+        <h3>Loading...</h3>
+      </div>
+    );
 
   // Display error state
   if (error) return <div>Error loading products</div>;
