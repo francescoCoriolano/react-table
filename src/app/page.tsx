@@ -1,4 +1,4 @@
-// import InfiniteScrollTable from "@/components/TablseInfiniteScroll";
+"use client";
 import TableOne from "@/components/TableOne";
 
 export default function Home() {
