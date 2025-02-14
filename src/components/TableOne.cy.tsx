@@ -164,4 +164,16 @@ describe("<TableOne />", () => {
     cy.get("tbody tr").should("have.length", 1);
     cy.contains("beauty").should("be.visible");
   });
+  it("Verify the downloaded file", () => {
+    mount(
+      <QueryClientProvider client={queryClient}>
+        <TableOne />
+      </QueryClientProvider>
+    );
+    cy.wait("@getProducts");
+    cy.get('button:contains("Download")').click();
+
+    const filePath = "/Users/francescocoriolano/Downloads/sample.csv";
+    cy.readFile(filePath, { timeout: 15000 }).should("exist");
+  });
 });

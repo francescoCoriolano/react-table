@@ -100,7 +100,7 @@ const TableOne = () => {
 
   const csvConfig = mkConfig({
     fieldSeparator: ",",
-    filename: "sample",
+    filename: "table3",
     decimalSeparator: ".",
     useKeysAsHeaders: true,
   });
