@@ -17,6 +17,7 @@ const Filter = ({ column }: { column: Column<any, unknown> }) => {
       className="w-[8rem] text-black bg-slate-200"
       onChange={(e) => column.setFilterValue(e.target.value)}
       value={columnFilterValue?.toString() || "All"}
+      aria-label="Category"
     >
       <option value="">All</option>
       <option value="beauty">beauty</option>
