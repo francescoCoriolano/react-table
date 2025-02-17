@@ -15,7 +15,6 @@ describe("<TableOne />", () => {
             id: 1,
             brand: "Brand A",
             title: "A",
-            // title: "Product A",
             category: "Beauty",
             rating: 4.5,
             price: 100,
@@ -24,7 +23,6 @@ describe("<TableOne />", () => {
             id: 2,
             brand: "Brand B",
             title: "B",
-            // title: "Product B",
             category: "Fragrances",
             rating: 4.0,
             price: 200,
@@ -33,7 +31,6 @@ describe("<TableOne />", () => {
             id: 3,
             brand: "Essence",
             title: "C",
-            //title: "Essence",
             category: "Furniture",
             rating: 4.0,
             price: 200,
@@ -41,7 +38,6 @@ describe("<TableOne />", () => {
           {
             id: 4,
             brand: "Essence",
-            // title: "Essence",
             title: "D",
             category: "Groceries",
             rating: 4.0,
@@ -62,7 +58,6 @@ describe("<TableOne />", () => {
       </QueryClientProvider>
     );
     cy.wait(15000);
-    // cy.wait("@getProductsError", { timeout: 1000 });
     cy.contains("Error loading products").should("be.visible");
   });
   it("displays loading state", () => {
@@ -90,20 +85,6 @@ describe("<TableOne />", () => {
     cy.wait("@getProducts");
     cy.get("tbody tr").should("have.length", 4);
   });
-
-  // it("displays error state", () => {
-  //   cy.intercept("GET", "https://dummyjson.com/products", {
-  //     statusCode: 500,
-  //   }).as("getProductsError");
-
-  //   mount(
-  //     <QueryClientProvider client={queryClient}>
-  //       <TableOne />
-  //     </QueryClientProvider>
-  //   );
-  //   cy.wait("@getProductsError", { timeout: 7000 });
-  //   cy.contains("Error loading products").should("be.visible");
-  // });
 
   it("filters table using global filter (search box)", () => {
     mount(
