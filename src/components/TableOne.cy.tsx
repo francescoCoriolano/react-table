@@ -51,15 +51,19 @@ describe("<TableOne />", () => {
       },
     }).as("getProducts");
   });
+  it("displays error state", () => {
+    cy.intercept("GET", "https://dummyjson.com/products", {
+      statusCode: 500,
+    }).as("getProductsError");
 
-  it("Render Table into UI", () => {
     mount(
       <QueryClientProvider client={queryClient}>
         <TableOne />
       </QueryClientProvider>
     );
-    cy.wait("@getProducts");
-    cy.get("tbody tr").should("have.length", 4);
+    cy.wait(15000);
+    // cy.wait("@getProductsError", { timeout: 1000 });
+    cy.contains("Error loading products").should("be.visible");
   });
   it("displays loading state", () => {
     cy.intercept("GET", "https://dummyjson.com/products", (req) => {
@@ -76,6 +80,15 @@ describe("<TableOne />", () => {
     );
 
     cy.contains("Loading...").should("be.visible");
+  });
+  it("Render Table into UI", () => {
+    mount(
+      <QueryClientProvider client={queryClient}>
+        <TableOne />
+      </QueryClientProvider>
+    );
+    cy.wait("@getProducts");
+    cy.get("tbody tr").should("have.length", 4);
   });
 
   // it("displays error state", () => {

@@ -132,7 +132,7 @@ const TableOne = () => {
 
   // Display error state
   if (error) return <div>Error loading products</div>;
-
+  if (error) return "An error has occurred: " + (error as Error).message;
   // Render the table
   return (
     <div className="pt-10">
