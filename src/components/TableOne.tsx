@@ -131,8 +131,12 @@ const TableOne = () => {
     );
 
   // Display error state
-  if (error) return <div>Error loading products</div>;
-  if (error) return "An error has occurred: " + (error as Error).message;
+  if (error)
+    return (
+      <div className="h-[100vh] w-[100vw] flex justify-center items-center ">
+        <h3>Error loading products</h3>
+      </div>
+    );
   // Render the table
   return (
     <div className="pt-10">
